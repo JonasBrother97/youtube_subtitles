@@ -53,6 +53,16 @@ def get_transcript(url):
                 open('transcript.txt', 'a').write(frase + ' ')
         except:
             pass
+    # Read in the file
+    with open('transcript.txt', 'r') as file :
+        filedata = file.read()
+
+    # Replace the target string
+    filedata = filedata.replace('\n', ' ')
+
+    # Write the file out again
+    with open('transcript.txt', 'w') as file:
+       file.write(filedata)
 
 languages = input('Enter the language: ')
 
