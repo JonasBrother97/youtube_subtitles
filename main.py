@@ -50,7 +50,7 @@ def get_transcript(url):
             srt = YouTubeTranscriptApi.get_transcript(id, languages=[languages])
             for i in srt:
                 frase = i['text']
-                open('transcript.txt', 'a').write(frase + '\n')
+                open('transcript.txt', 'a').write(frase + ' ')
         except:
             pass
 
