@@ -1,7 +1,10 @@
 from googleapiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi
 
-api_key = open('api_key.txt', 'r').read()
+try:
+    api_key = open('api_key.txt', 'r').read()
+except FileNotFoundError:
+    print('api_key.txt not found')
 
 def get_channel_id(url):
 
@@ -9,6 +12,7 @@ def get_channel_id(url):
 
     request = youtube.search().list(
         part='id',
+        type='channel',
         q=url
 
     ).execute()
@@ -43,9 +47,15 @@ def get_videos_id(channel_id):
 def get_transcript(url):
     for id in get_videos_id(get_channel_id(url)):
         try:
-            srt = YouTubeTranscriptApi.get_transcript(id)
+            srt = YouTubeTranscriptApi.get_transcript(id, languages=[languages])
             for i in srt:
                 frase = i['text']
                 open('transcript.txt', 'a').write(frase + '\n')
         except:
             pass
+
+languages = input('Enter the language: ')
+
+url = input('Enter the channel url: ')
+
+get_transcript(url)
