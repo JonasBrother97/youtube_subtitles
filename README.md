@@ -1,8 +1,8 @@
 # Download YouTube auto subtitles.
 
-Use YouTube API to get the auto subtitles of a channel.
-
 Download the subtitles of the latest 50 videos published of the channel.
+
+Uses Youtube API to get the videos ID and [youtube-transcript-api](https://github.com/jdepoix/youtube-transcript-api) to get the transcripts.
 
 ## Requirements
 
