@@ -1,71 +1,85 @@
 from googleapiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi
+import requests
+from bs4 import BeautifulSoup
+import csv
 
 try:
     api_key = open('api_key.txt', 'r').read()
 except FileNotFoundError:
     print('api_key.txt not found')
 
-def get_channel_id(url):
+class api:
 
-    youtube = build('youtube', 'v3', developerKey=api_key)
+    def get_channel_id(url):
 
-    request = youtube.search().list(
-        part='id',
-        type='channel',
-        q=url
+        youtube = build('youtube', 'v3', developerKey=api_key)
 
-    ).execute()
+        request = youtube.search().list(
+            part='id',
+            type='channel',
+            q=url
 
-    items = request['items']
+        ).execute()
 
-    channel_id = items[0]['id']['channelId']
+        items = request['items']
 
-    return channel_id
+        channel_id = items[0]['id']['channelId']
 
-def get_videos_id(channel_id):
+        return channel_id
 
-    youtube = build('youtube', 'v3', developerKey=api_key)
+    def get_videos_id(channel_id):
 
-    request = youtube.search().list(
-        part='id',
-        channelId=channel_id,
-        maxResults=50,
-        order='date'
-    ).execute()
+        youtube = build('youtube', 'v3', developerKey=api_key)
 
-    items = request['items']
+        request = youtube.search().list(
+            part='id',
+            channelId=channel_id,
+            maxResults=50,
+            order='date'
+        ).execute()
 
-    video_ids = []
+        items = request['items']
 
-    for item in items:
-        if "videoId" in item['id']:
-            video_ids.append(item['id']['videoId'])
-    
-    return video_ids
+        video_ids = []
 
-def get_transcript(url):
-    for id in get_videos_id(get_channel_id(url)):
-        try:
-            srt = YouTubeTranscriptApi.get_transcript(id, languages=[languages])
-            for i in srt:
-                frase = i['text']
-                open('transcript.txt', 'a').write(frase + ' ')
-        except:
-            pass
-    # Read in the file
-    with open('transcript.txt', 'r') as file :
-        filedata = file.read()
+        for item in items:
+            if "videoId" in item['id']:
+                video_ids.append(item['id']['videoId'])
+        
+        return video_ids
 
-    # Replace the target string
-    filedata = filedata.replace('\n', ' ')
+    def get_category(url):
+        r = requests.get(url)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        category = soup.find('meta', {'itemprop':"genre"})['content']
+        return category
 
-    # Write the file out again
-    with open('transcript.txt', 'w') as file:
-       file.write(filedata)
+    def transcript(url):
+        df = []
+        for id in api.get_videos_id(api.get_channel_id(url)):
+            try:
+                srt = YouTubeTranscriptApi.get_transcript(id, languages=[languages])
+                fala = []
+                for i in srt:
+                    fala.append(i['text'])
+                fala = ' '.join(fala)
+                cat = api.get_category('https://www.youtube.com/watch?v='+id)
+                lista = [id, fala, cat]
+                df.append(lista)
+            except:
+                pass
+        return df
 
 languages = input('Enter the language: ')
 
 url = input('Enter the channel url: ')
 
-get_transcript(url)
+list = api.transcript(url)
+
+fields = ['video_id', 'transcript', 'category']
+
+with open('list', 'w') as f:
+    writer = csv.writer(f)
+    writer.writerow(fields)
+    writer.writerows(list)
